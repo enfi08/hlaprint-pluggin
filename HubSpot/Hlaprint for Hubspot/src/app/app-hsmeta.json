@@ -1,0 +1,37 @@
+{
+  "uid": "app-HlaprintforHubspot",
+  "type": "app",
+  "config": {
+    "description": "An example to demonstrate how to build a marketplace app with developer projects.",
+    "name": "Hlaprint for Hubspot-Application",
+    "distribution": "private",
+    "auth": {
+      "type": "oauth",
+      "redirectUrls": ["http://localhost:3000"],
+      "requiredScopes": [
+        "crm.objects.contacts.read",
+        "crm.objects.contacts.write",
+        "crm.objects.deals.read",
+        "crm.objects.deals.write",
+        "tickets"
+      ],
+      "optionalScopes": [],
+      "conditionallyRequiredScopes": []
+    },
+    "permittedUrls": {
+      "fetch": [
+        "https://api.hubapi.com",
+        "https://hlaprint.com",
+        "https://879a9ec3af06.ngrok-free.app"
+      ],
+      "iframe": [],
+      "img": []
+    },
+    "support": {
+      "supportEmail": "support@hlaprint.com",
+      "documentationUrl": "https://hlaprint.com/documentation/api",
+      "supportUrl": "https://example.com/support",
+      "supportPhone": "+18005555555"
+    }
+  }
+}

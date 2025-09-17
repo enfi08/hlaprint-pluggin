@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developers.hubspot.com/schemas/app-card.schema.json",
+  "uid": "hlaprint-card",
+  "type": "card",
+  "config": {
+    "name": "HlaPrint",
+    "description": "Login to HlaPrint and send print jobs from CRM records.",
+    "location": "crm.record.sidebar",
+    "entrypoint": "/app/cards/HlaPrintCard.tsx",
+    "objectTypes": ["deals", "contacts", "tickets"]
+  }
+}

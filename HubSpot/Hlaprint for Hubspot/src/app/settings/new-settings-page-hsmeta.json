@@ -1,0 +1,7 @@
+{
+  "uid": "settings-HlaprintforHubspot",
+  "type": "settings",
+  "config": {
+    "entrypoint": "/app/settings/NewSettingsPage.tsx"
+  }
+}
