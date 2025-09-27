@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import {
   hubspot,
+  Stack,
+  Inline,
+  Text,
   Button,
   Input,
   Select,
@@ -8,8 +11,7 @@ import {
   Alert,
 } from "@hubspot/ui-extensions";
 
-// ---- CONFIG: set your backend base once here ----
-const BASE = "https://YOUR-HLAPRINT-DOMAIN"; // <-- change me
+const BASE = "https://hlaprint.com";
 
 type Ctx = {
   objectType?: string;
@@ -18,64 +20,67 @@ type Ctx = {
   portalId?: string | number;
 };
 
-export default function HlaPrintCard({ context }: { context: Ctx }) {
-  // UI state
+function HlaPrintCardView({ context }: { context: Ctx }) {
   const [stage, setStage] = useState<"login" | "ready" | "sending">("login");
   const [toast, setToast] = useState<{
     type: "success" | "error";
     msg: string;
   } | null>(null);
 
-  // Login & token (from /api/login)
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [token, setToken] = useState<string>("");
 
-  // Required by your /api/createPrintjob validator
-  const [deviceName, setDeviceName] = useState(""); // string, max 23
-  const [fileUrl, setFileUrl] = useState(""); // must be a reachable URL with allowed Content-Type
+  const [deviceName, setDeviceName] = useState("");
+  const [fileUrl, setFileUrl] = useState("");
 
-  // Optional print options (mapped to print_files[*])
-  const [copies, setCopies] = useState<number>(1); // 1..100
-  const [color, setColor] = useState<boolean>(false); // true/false
-  const [duplex, setDuplex] = useState<boolean>(true); // true/false
+  const [copies, setCopies] = useState<number>(1);
+  const [color, setColor] = useState<boolean>(false);
+  const [duplex, setDuplex] = useState<boolean>(true);
   const [pageSize, setPageSize] = useState<"A4" | "A3" | "Letter">("A4");
   const [orientation, setOrientation] = useState<
     "auto" | "portrait" | "landscape"
   >("auto");
-  const [rangeStart, setRangeStart] = useState<string>(""); // '' means unset
-  const [rangeEnd, setRangeEnd] = useState<string>(""); // '' means unset
+  const [rangeStart, setRangeStart] = useState<string>("");
+  const [rangeEnd, setRangeEnd] = useState<string>("");
 
-  const portalId = String(context.portalId ?? "");
-  const userId = String(context.userId ?? "");
-
-  // small helper around hubspot.fetch
-  async function hsFetch(path: string, init?: RequestInit) {
-    const res = await hubspot.fetch(`${BASE}${path}`, {
+  const hsFetch = async (path: string, init?: RequestInit) => {
+    const url = `${BASE}${path}`;
+    const res = await hubspot.fetch(url, {
       method: init?.method ?? "GET",
-      headers: {
-        "Content-Type": "application/json",
-        ...(init?.headers || {}),
-      },
+      headers: { "Content-Type": "application/json", ...(init?.headers || {}) },
       body: init?.body,
     });
     const text = await res.text();
-    const json = (() => {
-      try {
-        return JSON.parse(text);
-      } catch {
-        return text;
-      }
-    })();
+    const xErr = (res as any).headers?.get?.("x-hubspot-external-error") || "";
     if (!res.ok) {
-      throw new Error(
-        typeof json === "string"
-          ? `${res.status} ${json}`
-          : json?.message || JSON.stringify(json)
-      );
+      const detail =
+        `URL: ${url}\n` +
+        `Status: ${res.status}\n` +
+        `Proxy-Error: ${xErr}\n` +
+        `Body: ${(text || "<empty>").slice(0, 400)}`;
+      setToast({ type: "error", msg: detail });
+      console.error("hsFetch error", { url, status: res.status, xErr, text });
+      throw new Error(detail);
     }
-    return json;
-  }
+    try {
+      return JSON.parse(text);
+    } catch {
+      return text;
+    }
+  };
+
+  const debugPing = async () => {
+    try {
+      const res = await hubspot.fetch(`${BASE}/robots.txt`, { method: "GET" });
+      setToast({
+        type: res.ok ? "success" : "error",
+        msg: `Ping ${res.status} ${BASE}/robots.txt`,
+      });
+    } catch (e: any) {
+      setToast({ type: "error", msg: `Ping failed: ${String(e)}` });
+    }
+  };
 
   async function doLogin() {
     try {
@@ -83,25 +88,21 @@ export default function HlaPrintCard({ context }: { context: Ctx }) {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
-      // API returns { message, token, status }
-      const t = out?.token;
+      const t = (out as any)?.token;
       if (!t) throw new Error("Token missing in response");
       setToken(t);
       setToast({ type: "success", msg: "Logged in to HlaPrint." });
       setStage("ready");
     } catch (e: any) {
-      setToast({ type: "error", msg: e?.message || "Login failed" });
+      //handled in hs fetch already
     }
   }
 
-  // client-side guards matching your validator
   function validateBeforeSend(): string | null {
     if (!token) return "Please login first.";
     if (!deviceName) return "Device name is required.";
     if (deviceName.length > 23) return "Device name must be ≤ 23 characters.";
     if (!fileUrl) return "File URL is required.";
-
-    // if either range field is set, enforce both and numeric order
     const hasStart = rangeStart.trim().length > 0;
     const hasEnd = rangeEnd.trim().length > 0;
     if (hasStart !== hasEnd)
@@ -115,7 +116,6 @@ export default function HlaPrintCard({ context }: { context: Ctx }) {
         return "Page end must be an integer ≥ 1.";
       if (e < s) return "Page end must be ≥ page start.";
     }
-
     if (copies < 1 || copies > 100) return "Copies must be between 1 and 100.";
     return null;
   }
@@ -129,7 +129,6 @@ export default function HlaPrintCard({ context }: { context: Ctx }) {
 
     setStage("sending");
     try {
-      // Build one print file; you can extend to multiple if you want.
       const printFile: any = {
         filename: fileUrl,
         color,
@@ -138,41 +137,35 @@ export default function HlaPrintCard({ context }: { context: Ctx }) {
         copies,
         page_orientation: orientation,
       };
-      // Only include page range if both are set
       if (rangeStart && rangeEnd) {
         printFile.pages_start = Number(rangeStart);
         printFile.page_end = Number(rangeEnd);
       }
+      const body = { device_name: deviceName, print_files: [printFile] };
 
-      const body = {
-        device_name: deviceName,
-        print_files: [printFile],
-        // printer_name is NOT required by your validator; omitting.
-      };
-
-      // POST /api/createPrintjob with Bearer token
       const out = await hsFetch("/api/createPrintjob", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: JSON.stringify(body),
       });
 
-      // API returns: { message, transaction_id, code } on success
       setToast({
         type: "success",
-        msg: `Created. Txn ${out?.transaction_id ?? "-"}, code ${
-          out?.code ?? "-"
+        msg: `Created. Txn ${(out as any)?.transaction_id ?? "-"}, code ${
+          (out as any)?.code ?? "-"
         }`,
       });
-    } catch (e: any) {
-      setToast({ type: "error", msg: e?.message || "Failed to create job" });
+    } catch {
+      // hsFetch already handles
     } finally {
       setStage("ready");
     }
   }
 
   return (
-    <div style={{ padding: 12 }}>
+    <Stack gap="sm">
+      <Text format="bold">HlaPrint</Text>
+
       {toast && (
         <Alert
           title={toast.type === "success" ? "Success" : "Error"}
@@ -183,8 +176,14 @@ export default function HlaPrintCard({ context }: { context: Ctx }) {
         </Alert>
       )}
 
-      {stage === "login" && (
-        <>
+      <Inline gap="xs">
+        <Button onClick={debugPing} variant="secondary">
+          Debug Ping
+        </Button>
+      </Inline>
+
+      {stage === "login" ? (
+        <Stack gap="sm">
           <Input label="Email" value={email} onChange={setEmail} />
           <Input
             type="password"
@@ -193,20 +192,17 @@ export default function HlaPrintCard({ context }: { context: Ctx }) {
             onChange={setPassword}
           />
           <Button onClick={doLogin} variant="primary">
-            {stage === "login" ? "Login to HlaPrint" : "Please wait..."}
+            Login to HlaPrint
           </Button>
-        </>
-      )}
-
-      {stage !== "login" && (
-        <>
+        </Stack>
+      ) : (
+        <Stack gap="sm">
           <Input
             label="Device Name (≤ 23 chars)"
             placeholder="e.g., FrontDesk-PC"
             value={deviceName}
             onChange={(v) => v.length <= 23 && setDeviceName(v)}
           />
-
           <Input
             label="File URL (PDF / Image / Doc / Sheet)"
             placeholder="https://.../file.pdf"
@@ -214,9 +210,7 @@ export default function HlaPrintCard({ context }: { context: Ctx }) {
             onChange={setFileUrl}
           />
 
-          <div
-            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}
-          >
+          <Inline gap="sm">
             <Input
               type="number"
               label="Copies"
@@ -234,6 +228,9 @@ export default function HlaPrintCard({ context }: { context: Ctx }) {
                 { label: "Color", value: "true" },
               ]}
             />
+          </Inline>
+
+          <Inline gap="sm">
             <Select
               label="Duplex"
               value={String(duplex)}
@@ -253,26 +250,20 @@ export default function HlaPrintCard({ context }: { context: Ctx }) {
                 { label: "Letter", value: "Letter" },
               ]}
             />
-            <Select
-              label="Orientation"
-              value={orientation}
-              onChange={(v) => setOrientation(v as any)}
-              options={[
-                { label: "Auto", value: "auto" },
-                { label: "Portrait", value: "portrait" },
-                { label: "Landscape", value: "landscape" },
-              ]}
-            />
-          </div>
+          </Inline>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 8,
-              marginTop: 8,
-            }}
-          >
+          <Select
+            label="Orientation"
+            value={orientation}
+            onChange={(v) => setOrientation(v as any)}
+            options={[
+              { label: "Auto", value: "auto" },
+              { label: "Portrait", value: "portrait" },
+              { label: "Landscape", value: "landscape" },
+            ]}
+          />
+
+          <Inline gap="sm">
             <Input
               label="Page Start (optional)"
               value={rangeStart}
@@ -283,7 +274,7 @@ export default function HlaPrintCard({ context }: { context: Ctx }) {
               value={rangeEnd}
               onChange={setRangeEnd}
             />
-          </div>
+          </Inline>
 
           <Button
             onClick={sendPrint}
@@ -292,8 +283,10 @@ export default function HlaPrintCard({ context }: { context: Ctx }) {
           >
             {stage === "sending" ? <LoadingSpinner /> : "Send to HlaPrint"}
           </Button>
-        </>
+        </Stack>
       )}
-    </div>
+    </Stack>
   );
 }
+
+hubspot.extend(({ context }) => <HlaPrintCardView context={context as Ctx} />);

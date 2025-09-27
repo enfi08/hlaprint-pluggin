@@ -1,0 +1,128 @@
+{
+  "$schema": "https://developers.hubspot.com/schemas/workflow-action.schema.json",
+  "uid": "hlaprint-send",
+  "type": "workflow-action",
+  "config": {
+    "actionUrl": "https://879a9ec3af06.ngrok-free.app/api/hubspot/workflows/hlaprint/send",
+    "isPublished": false,
+    "supportedClients": [{ "client": "WORKFLOWS" }],
+    "inputFields": [
+      {
+        "typeDefinition": {
+          "name": "device_name",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "isRequired": true,
+        "supportedValueTypes": ["STATIC_VALUE"]
+      },
+      {
+        "typeDefinition": {
+          "name": "file_id",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "isRequired": true,
+        "supportedValueTypes": ["OBJECT_PROPERTY"]
+      },
+      {
+        "typeDefinition": {
+          "name": "copies",
+          "type": "number",
+          "fieldType": "number"
+        },
+        "supportedValueTypes": ["STATIC_VALUE"]
+      },
+      {
+        "typeDefinition": {
+          "name": "color",
+          "type": "enumeration",
+          "fieldType": "select",
+          "options": [
+            { "value": "false", "label": "Mono" },
+            { "value": "true", "label": "Color" }
+          ]
+        },
+        "supportedValueTypes": ["STATIC_VALUE"]
+      },
+      {
+        "typeDefinition": {
+          "name": "duplex",
+          "type": "enumeration",
+          "fieldType": "select",
+          "options": [
+            { "value": "false", "label": "Single" },
+            { "value": "true", "label": "Double" }
+          ]
+        },
+        "supportedValueTypes": ["STATIC_VALUE"]
+      },
+      {
+        "typeDefinition": {
+          "name": "page_size",
+          "type": "enumeration",
+          "fieldType": "select",
+          "options": [
+            { "value": "A4", "label": "A4" },
+            { "value": "A3", "label": "A3" },
+            { "value": "Letter", "label": "Letter" }
+          ]
+        },
+        "supportedValueTypes": ["STATIC_VALUE"]
+      },
+      {
+        "typeDefinition": {
+          "name": "orientation",
+          "type": "enumeration",
+          "fieldType": "select",
+          "options": [
+            { "value": "auto", "label": "Auto" },
+            { "value": "portrait", "label": "Portrait" },
+            { "value": "landscape", "label": "Landscape" }
+          ]
+        },
+        "supportedValueTypes": ["STATIC_VALUE"]
+      },
+      {
+        "typeDefinition": {
+          "name": "pages_start",
+          "type": "number",
+          "fieldType": "number"
+        },
+        "supportedValueTypes": ["STATIC_VALUE"]
+      },
+      {
+        "typeDefinition": {
+          "name": "page_end",
+          "type": "number",
+          "fieldType": "number"
+        },
+        "supportedValueTypes": ["STATIC_VALUE"]
+      }
+    ],
+    "labels": {
+      "en": {
+        "appDisplayName": "HlaPrint",
+        "actionName": "Send to HlaPrint",
+        "actionDescription": "Send a HubSpot file to HlaPrint with print options.",
+        "actionCardContent": "Send {{file_id}} to HlaPrint ({{copies}} copies)",
+        "inputFieldLabels": {
+          "device_name": "Device name",
+          "file_id": "HubSpot File ID",
+          "copies": "Copies",
+          "color": "Color",
+          "duplex": "Double-sided",
+          "page_size": "Page size",
+          "orientation": "Orientation",
+          "pages_start": "Pages start",
+          "page_end": "Pages end"
+        },
+        "inputFieldDescriptions": {
+          "device_name": "≤ 23 characters (required by HlaPrint).",
+          "file_id": "Map a property that contains a HubSpot Files fileId."
+        }
+      }
+    },
+    "objectTypes": ["CONTACT", "DEAL", "TICKET"]
+  }
+}

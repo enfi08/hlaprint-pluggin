@@ -7,13 +7,17 @@
     "distribution": "private",
     "auth": {
       "type": "oauth",
-      "redirectUrls": ["http://localhost:3000"],
+      "redirectUrls": [
+        "https://879a9ec3af06.ngrok-free.app/hubspot/oauth/callback",
+        "https://hlaprint.com/hubspot/oauth/callback"
+      ],
       "requiredScopes": [
+        "files",
         "crm.objects.contacts.read",
-        "crm.objects.contacts.write",
         "crm.objects.deals.read",
-        "crm.objects.deals.write",
-        "tickets"
+        "tickets",
+        "crm.objects.contacts.write",
+        "crm.objects.deals.write"
       ],
       "optionalScopes": [],
       "conditionallyRequiredScopes": []
@@ -21,6 +25,7 @@
     "permittedUrls": {
       "fetch": [
         "https://api.hubapi.com",
+        "https://www.hlaprint.com",
         "https://hlaprint.com",
         "https://879a9ec3af06.ngrok-free.app"
       ],

@@ -1,0 +1,8 @@
+{
+  "$schema": "https://developers.hubspot.com/schemas/settings-page.schema.json",
+  "uid": "hlaprint-settings",
+  "type": "settings",
+  "config": {
+    "entrypoint": "/app/settings/HlaPrintSettings.tsx"
+  }
+}
