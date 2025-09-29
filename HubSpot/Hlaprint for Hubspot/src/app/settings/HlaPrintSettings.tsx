@@ -23,8 +23,8 @@ function SettingsPage({ context }: { context: AnyCtx }) {
         {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
+            // "Content-Type": "application/json",
+            // Accept: "application/json",
           },
           body: JSON.stringify({ email, password }),
         }
@@ -53,7 +53,6 @@ function SettingsPage({ context }: { context: AnyCtx }) {
     }
   }
 
-  // Only UI-extensions components — no div/h2/p/etc.
   return (
     <>
       {status && (

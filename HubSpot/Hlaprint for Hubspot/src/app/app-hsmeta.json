@@ -27,7 +27,8 @@
         "https://api.hubapi.com",
         "https://www.hlaprint.com",
         "https://hlaprint.com",
-        "https://879a9ec3af06.ngrok-free.app"
+        "https://879a9ec3af06.ngrok-free.app",
+        "https://879a9ec3af06.ngrok-free.app/api/hubspot/settings/hlaprint/connect"
       ],
       "iframe": [],
       "img": []
